@@ -24,7 +24,7 @@ class AddingNewFieldsAndFixingExistingFieldsForAddresses extends CakeMigration {
 				'orders' => array(
 					'shipping_address_id' => array('type' => 'string', 'null' => true, 'default' => null, 'length' => 36),
 					'billing_address_id' => array('type' => 'string', 'null' => true, 'default' => null, 'length' => 36),
-					'shipping_rate' => array('type' => 'string', 'null' => false, 'default' => 0.00),
+					'shipping_rate' => array('type' => 'float', 'null' => false, 'default' => 0.00),
 					'gross' => array('type' => 'float', 'null' => false, 'default' => 0.00),
 				)
 			),
