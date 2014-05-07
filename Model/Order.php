@@ -431,7 +431,11 @@ class Order extends CartAppModel {
  * @return string
  */
 	public function orderNumber($data = array()) {
-		return $this->find('count') + Configure::read('Cart.base_order_number');
+		$count = $this->find('count') + Configure::read('Cart.base_order_number');
+		if (Configure::read('Environment.name') == 'live') {
+			return $count;
+		}
+		return $count - 100000;
 	}
 
 /**
