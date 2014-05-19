@@ -74,11 +74,16 @@ class CartAppModel extends AppModel {
 		if (empty($data)) {
 			$data = $this->data;
 		}
-
 		foreach ($fields as $field) {
 			if (!empty($data[$this->alias][$field])) {
 				if (!is_array($data[$this->alias][$field])) {
-					$serializedData = serialize(array());
+					$tmp = @unserialize($data[$this->alias][$field]);
+					if ($tmp !== false || $data[$this->alias][$field] === "b:0;") {
+						$serializedData = $data[$this->alias][$field];
+					} else {
+						$serializedData = serialize(array());
+					}
+					unset($tmp);
 				} else {
 					$serializedData = serialize($data[$this->alias][$field]);
 				}
