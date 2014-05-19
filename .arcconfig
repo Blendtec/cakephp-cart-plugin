@@ -1,0 +1,9 @@
+{
+  "project_id" : "cart-plugin",
+  "conduit_uri" : "https://dev.blendtec.com",
+  "arc.land.onto.default" : "orders/feature",
+  "lint.engine" : "ArcanistConfigurationDrivenLintEngine",
+  "unit.engine" : "CakePhpTestEngine"
+}
+
+
