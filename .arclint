@@ -1,5 +1,4 @@
 {
-  "debug" : false,
   "linters" : {
     "spelling" : {
       "type" : "spelling",
