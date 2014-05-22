@@ -57,10 +57,7 @@ class CartSessionComponent extends Component {
 			$this->write('CartsItem', $cart);
 			return $item;
 		} else {
-			if (!empty($item['increment'])) {
-				$item['quantity'] += $this->read('CartsItem.' . $arrayKey . '.quantity');
-				unset($item['increment']);
-			}
+			$item['quantity'] += $this->read('CartsItem.' . $arrayKey . '.quantity');
 			$this->write('CartsItem.' . $arrayKey, $item);
 			return $item;
 		}
