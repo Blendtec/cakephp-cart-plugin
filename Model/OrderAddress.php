@@ -46,6 +46,9 @@ class OrderAddress extends CartAppModel {
 		'city' => array(
 			'notEmpty' => array(
 			'rule' => 'notEmpty')),
+		'state' => array(
+			'notEmpty' => array(
+			'rule' => 'notEmpty')),
 		'zip' => array(
 			'notEmpty' => array(
 			'rule' => 'notEmpty')),
@@ -75,7 +78,7 @@ class OrderAddress extends CartAppModel {
  * Gets all addresses by user id ordered by primary address first and then first
  * name ascending
  *
- * @param string $userId
+ * @param string $userId the users id
  * @return array
  */
 	public function byUserId($userId = null) {
@@ -94,7 +97,7 @@ class OrderAddress extends CartAppModel {
 /**
  * beforeSave callback
  *
- * @param array $options
+ * @param array $options an array of options to pass
  * @return boolean
  */
 	public function beforeSave($options = array()) {
@@ -108,9 +111,7 @@ class OrderAddress extends CartAppModel {
 
 /**
  * Sanitizes the address fields
- *
- * - Cleans white spaces before and after the strings
- *
+ * Cleans white spaces before and after the strings
  *
  * @see OrderAdress::beforeSave();
  * @return void
@@ -129,8 +130,8 @@ class OrderAddress extends CartAppModel {
  * - fullReturn: Returns the full record set instead of just the id of the duplicate
  * - fields: List of table fields to compare
  *
- * @param array $data
- * @param array $options
+ * @param array $data    address data
+ * @param array $options options to pass
  * @return boolean|array
  */
 	public function findDuplicate($data = null, $options = array()) {
