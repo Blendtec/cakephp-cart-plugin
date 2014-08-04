@@ -438,9 +438,10 @@ class Cart extends CartAppModel {
 /**
  * beforeSave callback
  *
+ * @param array $options options
  * @return boolean
  */
-	public function beforeSave() {
+	public function beforeSave($options = array()) {
 		if (is_array($this->data[$this->alias]['additional_data'])) {
 			$this->data[$this->alias]['additional_data'] = serialize($this->data[$this->alias]['additional_data']);
 		}
