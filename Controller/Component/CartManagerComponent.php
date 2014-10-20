@@ -335,7 +335,7 @@ class CartManagerComponent extends Component {
 		if (!isset($data['CartsItem']['model'])) {
 			$data['CartsItem']['model'] = $this->settings['model'];
 		}
-		if (!empty($data['CartsItem'][$type]) && empty($data['CartsItem']['quantity'])) {
+		if (!empty($data['CartsItem'][$type]) && !isset($data['CartsItem']['quantity'])) {
 			$data['CartsItem']['quantity'] = (int)$data['CartsItem'][$type];
 		}
 		unset($data['CartsItem'][$type]);
