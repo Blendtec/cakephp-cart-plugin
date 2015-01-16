@@ -199,16 +199,11 @@ class Order extends CartAppModel {
 			if (empty($this->data[$this->alias]['currency'])) {
 				$this->data[$this->alias]['currency'] = Configure::read('Cart.defaultCurrency');
 			}
-
-			$this->data[$this->alias]['order_number'] = $this->orderNumber($this->data);
-			$this->data[$this->alias]['invoice_number'] = $this->invoiceNumber($this->data);
 			$this->data[$this->alias][$this->primaryKey] = $this->getLastInsertId();
-
 			$result = $this->save($this->data, array(
 				'validate' => false,
 				'callbacks' => false
 			));
-
 			$this->data = $result;
 			$this->getEventManager()->dispatch(new CakeEvent('Order.created', $this, array($this->data)));
 		}
@@ -257,6 +252,7 @@ class Order extends CartAppModel {
 		$defaults = array(
 			'contain' => array(
 				'OrderItem',
+
 				'BillingAddress',
 				'ShippingAddress'
 			),
@@ -310,6 +306,8 @@ class Order extends CartAppModel {
 			'status' => empty($data[$this->alias]['status']) ? 'pending' : $data[$this->alias]['status'],
 			'cart_snapshot' => $data,
 			'total' => $data['Cart']['total'],
+			'order_number' => $this->orderNumber($this->data),
+			'invoice_number' => $this->invoiceNumber($this->data)
 		);
 
 		$data[$this->alias] = Hash::merge($data[$this->alias], $defaults);
@@ -369,7 +367,6 @@ class Order extends CartAppModel {
 			}
 
 			$DataSource->commit();
-
 			$Event = new CakeEvent(
 				'Order.created',
 				$this, array(
