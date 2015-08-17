@@ -54,7 +54,7 @@ class OrderAddress extends CartAppModel {
 				'rule' => array('maxLength', 10),
 				'message' => 'Zip must be less than 10 characters',
 				'allowEmpty' => false,
-				'required' => false,
+				'required' => true,
 			)
 		),
 		'country' => array(
