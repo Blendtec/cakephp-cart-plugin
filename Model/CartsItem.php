@@ -218,7 +218,7 @@ class CartsItem extends CartAppModel {
  * @param array $array2 The array that will get merged into $array1 and override its item if present
  * @return array
  */
-	public function mergeItems($array1, $array2) {
+	public function mergeItems($array2, $array1) {
 		if (!isset($array1[$this->alias])) {
 			$array1[$this->alias] = array();
 		}
