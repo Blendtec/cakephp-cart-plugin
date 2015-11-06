@@ -86,10 +86,12 @@ class CartsItem extends CartAppModel {
  * @return void
  */
 	public function validateItem($data, $loggedIn = false) {
+
 		if ($loggedIn === false) {
 			unset($this->validate['cart_id']);
 		}
 		$this->set($data);
+
 		return $this->validates();
 	}
 
@@ -240,6 +242,12 @@ class CartsItem extends CartAppModel {
 		if (!empty($array2)) {
 			foreach ($array2[$this->alias] as $key => $item) {
 				$array1[$this->alias][] = $item;
+			}
+
+			foreach ($array2 as $key => $val) {
+				if ($key != $this->alias && $key != 'Cart') {
+					$array1[$key] = $array2[$key];
+				}
 			}
 		}
 
