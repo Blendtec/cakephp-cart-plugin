@@ -5,8 +5,8 @@ App::uses('AddressType', 'Cart.Model');
 /**
  * Order Model
  *
- * @author Florian KrÃ¤mer
- * @copyright 2014 Florian KrÃ¤mer
+ * @author Florian Krämer
+ * @copyright 2014 Florian Krämer
  * @license MIT
  */
 class Order extends CartAppModel {
@@ -427,12 +427,32 @@ class Order extends CartAppModel {
  * @param $data, not currently used
  * @return string
  */
+	public function make_sure_order_number_is_unique($order_number){
+		//usleep(rand(0,500000)); this line is a possible solution if we keep getting non-unique order_numbers
+
+			$already_exists = $this->find('first', array(
+				'conditions' => array('order_number' => $order_number)
+			));
+			if(isset($already_exists['Order']['order_number'])){
+				return $this->make_sure_order_number_is_unique($order_number+1);
+			}else{
+				return $order_number;
+			}
+	}
+
+
+
 	public function orderNumber($data = array()) {
-		$count = $this->find('count') + Configure::read('Cart.base_order_number');
-		if (Configure::read('Environment.name') == 'live') {
+			$already_exists = $this->find('first', array(
+				'conditions' => array('order_number REGEXP' => "^[0-9]*$"),
+				'order' => array('order_number' => 'desc')
+			));
+
+			$count = $already_exists['Order']['order_number'] + 1;
+
+			$count = $this->make_sure_order_number_is_unique($count);
 			return $count;
-		}
-		return $count - 100000;
+
 	}
 
 /**
