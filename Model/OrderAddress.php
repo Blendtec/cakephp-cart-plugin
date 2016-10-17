@@ -46,15 +46,24 @@ class OrderAddress extends CartAppModel {
 		'city' => array(
 			'notEmpty' => array(
 			'rule' => 'notEmpty')),
-		'zip' => array(
+		'state' => array(
 			'notEmpty' => array(
 			'rule' => 'notEmpty')),
+		'zip' => array(
+			'length' => array(
+				'rule' => array('maxLength', 10),
+				'message' => 'Zip must be less than 10 characters',
+				'allowEmpty' => false,
+				'required' => true,
+			)
+		),
 		'country' => array(
 			'notEmpty' => array(
 			'rule' => 'notEmpty')),
 		'type' => array(
 			'notEmpty' => array(
-			'rule' => 'notEmpty')),
+			'rule' => 'notEmpty')
+		),
 	);
 
 /**
@@ -74,17 +83,103 @@ class OrderAddress extends CartAppModel {
  * Gets all addresses by user id ordered by primary address first and then first
  * name ascending
  *
- * @param string $userId
+ * @param string $userId the users id
  * @return array
  */
 	public function byUserId($userId = null) {
 		$this->find('all', array(
 			'contain' => array(),
 			'conditions' => array(
-				$this->alias . '.user_id' => $userId ),
+				$this->alias . '.user_id' => $userId
+			),
 			'order' => array(
 				'primary' => 'ASC',
-				'first_name' => 'ASC')));
+				'first_name' => 'ASC'
+			)
+		));
+	}
+
+/**
+ * beforeSave callback
+ *
+ * @param array $options an array of options to pass
+ * @return boolean
+ */
+	public function beforeSave($options = array()) {
+		if (!parent::beforeSave($options)) {
+			return false;
+		}
+
+		$this->sanitizeFields();
+		return true;
+	}
+
+/**
+ * Sanitizes the address fields
+ * Cleans white spaces before and after the strings
+ *
+ * @see OrderAdress::beforeSave();
+ * @return void
+ */
+	public function sanitizeFields() {
+		foreach ($this->data[$this->alias] as $field => $value) {
+			if (is_string($value)) {
+				$this->data[$this->alias][$field] = trim($value);
+			}
+		}
+	}
+
+/**
+ * Detects a duplicate address based on the first argument or if null Model::$data
+ *
+ * - fullReturn: Returns the full record set instead of just the id of the duplicate
+ * - fields: List of table fields to compare
+ *
+ * @param array $data    address data
+ * @param array $options options to pass
+ * @return boolean|array
+ */
+	public function findDuplicate($data = null, $options = array()) {
+		$defaults = array(
+			'fullReturn' => false,
+			'fields' => array_keys($this->validate)
+		);
+
+		$options = Hash::merge($defaults, $options);
+
+		if (empty($data)) {
+			$data = $this->data;
+		}
+
+		if (empty($options['fields'])) {
+			$options['fields'] = array_keys($this->validate);
+		}
+
+		$conditions = array();
+		foreach ($options['fields'] as $field) {
+			if (isset($data[$this->alias][$field])) {
+				$conditions[$this->alias . '.' . $field][$field] = $data[$this->alias][$field];
+			}
+		}
+
+		if (empty($conditions)) {
+			return false;
+		}
+
+		$result = $this->find('first', array(
+			'contain' => array(),
+			'conditions' => $conditions
+		));
+
+		if (empty($result)) {
+			return false;
+		}
+
+		if ($options['fullReturn'] === true) {
+			return $result;
+		}
+
+		return $result[$this->alias][$this->primaryKey];
 	}
 
 }

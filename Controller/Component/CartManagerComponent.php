@@ -130,6 +130,15 @@ class CartManagerComponent extends Component {
 		}
 	}
 
+/**
+ * Cart initialization
+ *
+ * - Checks if the cart data is in the session and if not initializes an empty cart structure in the session
+ * - If the user is logged in and a cart session is present it merges the persistent data from the db with the session
+ * - Sets the CartManager::$_cartId
+ *
+ * @return void
+ */
 	public function initializeCart() {
 		extract($this->settings);
 		$userId = $this->Auth->user('id');
@@ -190,6 +199,10 @@ class CartManagerComponent extends Component {
 
 		if ($this->Controller->request->is('post')) {
 			$data = $this->postBuy();
+		}
+
+		if ($data === false) {
+			return false;
 		}
 
 		$type = $this->getItemAction($data);
@@ -309,7 +322,7 @@ class CartManagerComponent extends Component {
 
 /**
  * Adds additional data here that depends more or less on the controller and we
- * want to be present in the before
+ * want to be present in the addItem() method
  *
  * @param array $data
  * @param string $type
@@ -322,7 +335,7 @@ class CartManagerComponent extends Component {
 		if (!isset($data['CartsItem']['model'])) {
 			$data['CartsItem']['model'] = $this->settings['model'];
 		}
-		if (!empty($data['CartsItem'][$type]) && empty($data['CartsItem']['quantity'])) {
+		if (!empty($data['CartsItem'][$type]) && !isset($data['CartsItem']['quantity'])) {
 			$data['CartsItem']['quantity'] = (int)$data['CartsItem'][$type];
 		}
 		unset($data['CartsItem'][$type]);
@@ -413,7 +426,7 @@ class CartManagerComponent extends Component {
 
 		$Event = new CakeEvent('CartManager.beforeAddItem', $this, array($data));
 		$this->_EventManager->dispatch($Event);
-		if ($Event->isStopped()) {
+		if ($Event->result === false || $Event->isStopped()) {
 			return false;
 		}
 
@@ -518,12 +531,11 @@ class CartManagerComponent extends Component {
 		$defaults = array(
 			'unserialize' => true,
 		);
-		$options = Set::merge($defaults, $options);
-		$this->calculateCart($options);
+		$options = Hash::merge($defaults, $options);
 		$cart = $this->CartSession->read();
 		if ($options['unserialize'] === true) {
 			foreach ($cart['CartsItem'] as $key => &$cartItem) {
-				if (isset($cartItem['additional_data'])) {
+				if (isset($cartItem['additional_data']) && !is_array($cartItem['additional_data'])) {
 					$cartItem['additional_data'] = unserialize($cartItem['additional_data']);
 				}
 			}
@@ -589,10 +601,10 @@ class CartManagerComponent extends Component {
  * @return array the cart data
  */
 	public function calculateCart($options = array()) {
-		$cartData = $this->Session->read($this->settings['sessionKey']);
+		$cartData = $this->content();
 
 		if (isset($options['cartData'])) {
-			$cartData = Set::merge($cartData, $options['cartData']);
+			$cartData = Hash::merge($cartData, $options['cartData']);
 		}
 
 		$cartData = $this->CartModel->calculateCart($cartData, $options);

@@ -18,6 +18,11 @@ class D287dbf03fef11e1b86c0800200c9a66 extends CakeMigration {
  */
 	public $migration = array(
 		'up' => array(
+			'rename_table' => array(
+				'orders' => 'old_orders',
+				'cart_items' => 'old_cart_items',
+				'carts' => 'old_carts'
+			),
 			'create_table' => array(
 				'carts' => array(
 					'id' => array('type' => 'string', 'null' => false, 'default' => null, 'length' => 36, 'key' => 'primary'),

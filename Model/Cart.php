@@ -67,7 +67,7 @@ class Cart extends CartAppModel {
 /**
  * Checks if a cart is active or not
  *
- * @param string cart uuid
+ * @param string $cartId cart uuid
  * @return boolean
  */
 	public function isActive($cartId = null) {
@@ -88,8 +88,8 @@ class Cart extends CartAppModel {
 /**
  * Returns the active cart for a user, if there is no one it will create one and return it
  *
- * @param string user uuid
- * @param boolean $create
+ * @param string $userId user uuid
+ * @param boolean $create create
  * @return array
  */
 	public function getActive($userId = null, $create = true) {
@@ -127,10 +127,10 @@ class Cart extends CartAppModel {
 /**
  * Sets a cart as active cart in the case there multiple carts present for an user
  *
- * @throws NotFoundException
- * @param string $cartId
- * @param string $userId
+ * @param string $cartId cart id
+ * @param string $userId user id
  * @return boolean
+ * @throws NotFoundException
  */
 	public function setActive($cartId, $userId = null) {
 		$result = $this->find('first', array(
@@ -168,10 +168,10 @@ class Cart extends CartAppModel {
 /**
  * Returns a cart and its contents
  *
- * @throws NotFoundException
- * @param string $cartId
- * @param string $userId
+ * @param string $cartId cart id
+ * @param string $userId user id
  * @return array
+ * @throws NotFoundException
  */
 	public function view($cartId = null, $userId = null) {
 		$conditions = array(
@@ -201,8 +201,8 @@ class Cart extends CartAppModel {
  *
  * Passing this through to the join table model
  *
- * @param string $cartId
- * @param array $itemData
+ * @param string $cartId cart id
+ * @param array $itemData cart item data
  * @return boolean
  */
 	public function addItem($cartId, $itemData) {
@@ -214,8 +214,8 @@ class Cart extends CartAppModel {
  *
  * Passing this through to the join table model
  *
- * @param string $cartId Cart UUID
- * @param $itemData
+ * @param string $cartId   Cart UUID
+ * @param array  $itemData cart item data
  * @return boolean
  */
 	public function removeItem($cartId, $itemData) {
@@ -225,7 +225,7 @@ class Cart extends CartAppModel {
 /**
  * Drops the cart an all it's items
  *
- * @param string $cartId
+ * @param string $cartId cart id
  * @return boolean
  */
 	public function emptyCart($cartId) {
@@ -255,8 +255,8 @@ class Cart extends CartAppModel {
 /**
  * Calculates the totals of a cart
  *
- * @param array $data
- * @param array $options
+ * @param array $data cart data
+ * @param array $options options
  * @return array
  */
 	public function calculateCart($data, $options = array()) {
@@ -273,7 +273,8 @@ class Cart extends CartAppModel {
 		if (isset($data['CartsItem'])) {
 			$data[$this->alias]['item_count'] = count($data['CartsItem']);
 		} else {
-			return $data[$this->alias]['total'] = 0.00;
+			$data[$this->alias]['total'] = 0.00;
+			return $data;
 		}
 
 		$cart[$this->alias]['requires_shipping'] = $this->requiresShipping($data['CartsItem']);
@@ -290,8 +291,7 @@ class Cart extends CartAppModel {
 
 		if (isset($data[$this->alias][$this->primaryKey])) {
 			$this->save($data, array(
-				'validate' => false,
-				'callbacks' => false,
+				'validate' => false
 			));
 		}
 
@@ -301,11 +301,13 @@ class Cart extends CartAppModel {
 /**
  * Applies tax rules to the cart
  *
- * @param array $cartData
+ * @param array $cartData cart data
  * @return array
  */
 	public function applyTaxRules($cartData) {
-		$Event = new CakeEvent('Cart.applyTaxRules', $this, array('cartData' => $cartData));
+		$Event = new CakeEvent('Cart.applyTaxRules', $this, array(
+			'cartData' => $cartData
+		));
 		$this->getEventManager()->dispatch($Event);
 		if (!empty($Event->result)) {
 			return $Event->result;
@@ -316,11 +318,13 @@ class Cart extends CartAppModel {
 /**
  * Applies discount rules to the cart
  *
- * @param array $cartData
+ * @param array $cartData cart data
  * @return array
  */
 	public function applyDiscounts($cartData) {
-		$Event = new CakeEvent('Cart.applyDiscounts', $this, array('cartData' => $cartData));
+		$Event = new CakeEvent('Cart.applyDiscounts', $this, array(
+			'cartData' => $cartData
+		));
 		$this->getEventManager()->dispatch($Event);
 		if (!empty($Event->result)) {
 			return $Event->result;
@@ -331,19 +335,17 @@ class Cart extends CartAppModel {
 /**
  * Calculates the total amount of the cart
  *
- * @param array $cartData
+ * @param array $cartData cart data
  * @return array
  */
 	public function calculateTotals($cartData) {
-		$cartData[$this->alias]['total'] = 0.00;
-
-		if (!empty($cartData['CartsItem'])) {
-			foreach ($cartData['CartsItem'] as $key => $item) {
-				$cartData['CartsItem'][$key]['total'] = (float)$item['quantity'] * (float)$item['price'];
-				$cartData[$this->alias]['total'] += (float)$cartData['CartsItem'][$key]['total'];
-			}
+		$Event = new CakeEvent('Cart.calculateTotals', $this, array(
+			'cartData' => $cartData
+		));
+		$this->getEventManager()->dispatch($Event);
+		if (!empty($Event->result)) {
+			return $Event->result;
 		}
-
 		return $cartData;
 	}
 
@@ -354,9 +356,9 @@ class Cart extends CartAppModel {
  * happens but after the user was authenticated if you want to take the items
  * from the non-logged in user into the users database cart.
  *
- * @param integer|string $cartId
- * @param array $cartItems
- * @return void
+ * @param integer|string $cartId cart id
+ * @param array $cartItems cart items
+ * @return integer Number of merged items
  */
 	public function mergeItems($cartId, $cartItems) {
 		$dbItems = $this->CartsItem->find('all', array(
@@ -366,6 +368,7 @@ class Cart extends CartAppModel {
 			)
 		));
 
+		$mergedItems = 0;
 		foreach ($cartItems as $cartKey => $cartItem) {
 			$matched = false;
 			foreach ($dbItems as $dbItem) {
@@ -376,16 +379,18 @@ class Cart extends CartAppModel {
 				}
 			}
 			if ($matched === false) {
+				$mergedItems++;
 				$this->addItem($cartId, $cartItem);
 			}
 		}
+		return $mergedItems;
 	}
 
 /**
  * Add a new cart
  *
- * @param array $postData
- * @param $userId
+ * @param array $postData post data
+ * @param string $userId user id
  * @return boolean
  */
 	public function add($postData, $userId = null) {
@@ -409,11 +414,38 @@ class Cart extends CartAppModel {
 /**
  * Checkout confirmation
  *
- * @param array $data
+ * @param array $data cart data
  * @return boolean
  */
 	public function confirmCheckout($data) {
 		return (isset($data[$this->alias]['confirm_checkout']) && $data[$this->alias]['confirm_checkout'] == 1);
+	}
+
+/**
+ * afterFind callback
+ *
+ * @param array   $results find results
+ * @param boolean $primary primary table or relation
+ * @return array
+ */
+	public function afterFind($results, $primary = true) {
+		foreach ($results as &$result) {
+			$result = $this->_unserializeFields(array('additional_data'), $result);
+		}
+		return $results;
+	}
+
+/**
+ * beforeSave callback
+ *
+ * @param array $options options
+ * @return boolean
+ */
+	public function beforeSave($options = array()) {
+		if (is_array($this->data[$this->alias]['additional_data'])) {
+			$this->data[$this->alias]['additional_data'] = serialize($this->data[$this->alias]['additional_data']);
+		}
+		return true;
 	}
 
 }
